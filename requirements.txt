@@ -16,7 +16,7 @@ Pyrogram==2.0.106
 PySocks==1.7.1
 pytz==2023.3.post1
 pytz-deprecation-shim==0.1.0.post0
-qbittorrent-api==2023.11.57
+qbittorrent-api==2024.11.70
 requests==2.32.0
 six==1.16.0
 TgCrypto==1.2.5
