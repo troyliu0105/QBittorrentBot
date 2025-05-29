@@ -22,8 +22,19 @@ def get_router():
     router = Router()
 
     async def on_magnet(message: Message, redis: RedisWrapper, bot: Bot, settings: Settings):
-        if message.text.startswith("magnet:?xt"):
-            magnet_link = message.text.split("\n")
+        magnet_link = []
+        has_invalid = False
+        for m in message.text.split("\n"):
+            if not m.startswith("magnet:?xt"):
+                # accept bare info-hash (alphanumeric, e.g. 40-char btih) and promote it
+                if m.isalnum():
+                    m = "magnet:?xt=urn:btih:" + m
+                else:
+                    has_invalid = True
+                    break
+            magnet_link.append(m)
+
+        if not has_invalid and magnet_link:
             category = (await redis.get(f"action:{message.from_user.id}")).split("#")[1]
 
             repository_class = ClientRepo.get_client_manager(settings.client.type)
