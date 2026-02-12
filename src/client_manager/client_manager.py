@@ -54,6 +54,10 @@ class ClientManager(ABC):
         """Get categories"""
         raise NotImplementedError
 
+    async def set_torrents_category(self, category: str, torrent_hashes: List[str]):
+        """Set torrents category"""
+        raise NotImplementedError
+
     async def get_torrent(self, torrent_hash: str, status_filter: str = None):
         """Get a torrent info with or without a status filter"""
         raise NotImplementedError

@@ -23,3 +23,7 @@ class ModifyCategory(CallbackData, prefix="modify_category"):
 
 class CategoryAction(CallbackData, prefix="category"):
     action: str
+
+class ChangeTorrentCategory(CallbackData, prefix="torrent_cat"):
+    torrent_hash: str
+    category: str

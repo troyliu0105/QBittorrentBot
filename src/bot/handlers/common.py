@@ -3,14 +3,14 @@ import logging
 
 from aiogram import Bot
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
+from aiogram.utils.i18n import gettext as _
 
 from src.redis_helper.wrapper import RedisWrapper
 from src.settings import Settings
 from src.client_manager.client_repo import ClientRepo
 from src.utils import get_user_from_config
 from src.settings.enums import UserRolesEnum
-from src.bot.filters.callbacks import CategoryAction, CategoryMenu, ListByStatus, List, TorrentInfo, SettingsMenu, DeleteMenu, PauseResumeMenu
-from aiogram.utils.i18n import gettext as _
+from src.bot.filters.callbacks import CategoryAction, CategoryMenu, ListByStatus, List, TorrentInfo, SettingsMenu, DeleteMenu, PauseResumeMenu, Menu
 
 logger = logging.getLogger(__name__)
 
@@ -147,4 +147,49 @@ async def list_active_torrents(
             chat_id=chat_id,
             text=_("🔙 Menu"),
             reply_markup=markup
+        )
+
+
+async def list_categories(
+    bot: Bot,
+    chat_id: int,
+    message_id: int,
+    settings: Settings,
+    callback: str
+):
+    buttons = []
+
+    repository_class_class = ClientRepo.get_client_manager(settings.client.type)
+    categories = await repository_class_class(settings).get_categories()
+
+    if categories is None:
+        buttons.append([InlineKeyboardButton(text=_("🔙 Menu"), callback_data=Menu().pack())])
+
+        await bot.edit_message_text(
+            chat_id=chat_id,
+            message_id=message_id,
+            text=_("There are no categories"),
+            reply_markup=InlineKeyboardMarkup(inline_keyboard=buttons)
+        )
+
+        return
+
+    for i in categories:
+        buttons.append([InlineKeyboardButton(text=i, callback_data=f"{callback}:{i}")])
+
+    buttons.append([InlineKeyboardButton(text=_("🔙 Menu"), callback_data=Menu().pack())])
+
+    try:
+        await bot.edit_message_text(
+            chat_id=chat_id,
+            message_id=message_id,
+            text=_("Choose a category:"),
+            reply_markup=InlineKeyboardMarkup(inline_keyboard=buttons)
+        )
+
+    except Exception:
+        await bot.send_message(
+            chat_id,
+            _("Choose a category:"),
+            reply_markup=InlineKeyboardMarkup(inline_keyboard=buttons)
         )

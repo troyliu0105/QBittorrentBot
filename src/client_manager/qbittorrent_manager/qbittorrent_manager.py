@@ -96,6 +96,10 @@ class QbittorrentManager(ClientManager):
             else:
                 return
 
+    async def set_torrents_category(self, category: str, torrent_hashes: str | List[str]):
+        async with self._client() as qbt:
+            await qbt.call(qbt.client.torrents_set_category, category=category, torrent_hashes=torrent_hashes)
+
     async def get_torrent(self, torrent_hash: str, status_filter: str = None) -> Union[Torrent, None]:
         logger.debug(f"Getting torrent with hash {torrent_hash}")
         async with self._client() as qbt:

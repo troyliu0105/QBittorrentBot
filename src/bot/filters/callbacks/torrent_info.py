@@ -7,3 +7,6 @@ class TorrentInfo(CallbackData, prefix="torrentInfo"):
 
 class Export(CallbackData, prefix="export"):
     torrent_hash: str
+
+class EditTorrentCategory(CallbackData, prefix="edit_torrent_cat"):
+    torrent_hash: str

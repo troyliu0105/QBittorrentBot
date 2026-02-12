@@ -7,17 +7,17 @@ from aiogram.utils.i18n import gettext as _
 
 from src.client_manager.client_repo import ClientRepo
 from src.settings import Settings
-from src.settings.user import User
 from src.utils import convert_size, convert_eta, format_progress
 
-from src.bot.filters.callbacks import TorrentInfo, Export, Pause, Resume, DeleteOne, Menu
+from src.bot.filters.callbacks import TorrentInfo, Export, Pause, Resume, DeleteOne, Menu, EditTorrentCategory
+from src.bot.handlers.common import list_categories
 
 
 def get_router():
     router = Router()
 
     @router.callback_query(TorrentInfo.filter())
-    async def torrent_info_callback(callback_query: CallbackQuery, callback_data: TorrentInfo, settings: Settings, bot: Bot, user: User) -> None:
+    async def torrent_info_callback(callback_query: CallbackQuery, callback_data: TorrentInfo, settings: Settings, bot: Bot) -> None:
         repository_class = ClientRepo.get_client_manager(settings.client.type)
         torrent = await repository_class(settings).get_torrent(callback_data.torrent_hash)
 
@@ -66,6 +66,12 @@ def get_router():
             ],
             [
                 InlineKeyboardButton(
+                    text=_("📝 Edit Category"),
+                    callback_data=EditTorrentCategory(torrent_hash=callback_data.torrent_hash).pack()
+                )
+            ],
+            [
+                InlineKeyboardButton(
                     text=_("⏸ Pause"),
                     callback_data=Pause(torrent_hash=callback_data.torrent_hash).pack()
                 )
@@ -107,5 +113,9 @@ def get_router():
             callback_query.from_user.id,
             BufferedInputFile(file_bytes.read(), file_bytes.name)
         )
+
+    @router.callback_query(EditTorrentCategory.filter())
+    async def edit_torrent_cateogry(callback_query: CallbackQuery, callback_data: EditTorrentCategory, settings: Settings, bot: Bot):
+        await list_categories(bot, callback_query.from_user.id, callback_query.message.message_id, settings, f"torrent_cat:{callback_data.torrent_hash}")
 
     return router
