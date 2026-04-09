@@ -135,34 +135,31 @@ The `docker-compose.yml` file should already be pre-configured for you. It will 
 This method will also mount the `/app/config/` volume, ensuring that the bot uses your configuration settings.
 
 ### Running Without Docker
+If you prefer to run the bot natively, follow these steps. This project uses **uv** for high-performance dependency management.
 
-If you prefer to run the bot without Docker, you can follow these steps:
+### 1. Clone the repository
+```bash
+git clone https://github.com/ch3p4ll3/QBittorrentBot.git
+cd QBittorrentBot
+```
 
-1. Clone the repository:
+### 2. Install uv
+If you don't have `uv` installed yet, follow the [official installation guide](https://docs.astral.sh/uv/getting-started/installation/).
 
-   ```bash
-   git clone https://github.com/ch3p4ll3/QBittorrentBot.git
-   ```
+### 3. Setup Configuration
+Create your `config.yml` file based on the provided template.
 
-2. Move into the project directory:
+### 4. Start the Bot
+You don't need to manually install requirements into a global environment. Simply run:
 
-   ```bash
-   cd QBittorrentBot
-   ```
+```bash
+uv run python -m src.main
+```
 
-3. Install dependencies:
+> **Note:** `uv` will automatically create a virtual environment, install the necessary dependencies from your `pyproject.toml` or `requirements.txt`, and execute the bot as a module.
 
-   ```bash
-   pip3 install -r requirements.txt
-   ```
-
-4. Create your **`config.yml`** file.
-
-5. Start the bot:
-
-   ```bash
-   python3 main.py
-   ```
+### Why the change?
+Using `python -m src.main` instead of `python3 main.py` ensures that the Python interpreter correctly recognizes the `src` folder as a package, preventing common `ImportError` issues with relative paths.
 
 ## Contributing Translations on Transifex
 
