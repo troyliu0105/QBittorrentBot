@@ -8,7 +8,7 @@ from aiogram.utils.i18n import gettext as _
 from src.client_manager.client_repo import ClientRepo
 from src.settings import Settings
 from src.settings.user import User
-from src.utils import convert_size, convert_eta, format_progress
+from src.utils import convert_size, convert_eta, format_progress, escape_markdown
 
 from src.bot.filters.callbacks import TorrentInfo, Export, Pause, Resume, DeleteOne, Menu
 
@@ -21,7 +21,7 @@ def get_router():
         repository_class = ClientRepo.get_client_manager(settings.client.type)
         torrent = await repository_class(settings).get_torrent(callback_data.torrent_hash)
 
-        text_to_send = f"{torrent.name}\n"
+        text_to_send = f"{escape_markdown(torrent.name)}\n"
 
         if torrent.progress == 1:
             text_to_send += _("**COMPLETED**\n")
