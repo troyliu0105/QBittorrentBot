@@ -33,6 +33,16 @@
       "contributions": [
         "translation"
       ]
+    },
+    {
+      "login": "fiveh",
+      "name": "Andrew Miroshnichenko",
+      "avatar_url": "https://avatars.githubusercontent.com/u/12550241?v=4",
+      "profile": "https://github.com/fiveh",
+      "contributions": [
+        "code",
+        "bug"
+      ]
     }
   ],
   "contributorsPerLine": 7,
