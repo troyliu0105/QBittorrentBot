@@ -5,7 +5,7 @@
 
 
 <!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
-[![All Contributors](https://img.shields.io/badge/all_contributors-3-orange.svg?style=flat-square)](#contributors-)
+[![All Contributors](https://img.shields.io/badge/all_contributors-4-orange.svg?style=flat-square)](#contributors-)
 <!-- ALL-CONTRIBUTORS-BADGE:END -->
 
 # QBittorrentBot
@@ -135,34 +135,31 @@ The `docker-compose.yml` file should already be pre-configured for you. It will 
 This method will also mount the `/app/config/` volume, ensuring that the bot uses your configuration settings.
 
 ### Running Without Docker
+If you prefer to run the bot natively, follow these steps. This project uses **uv** for high-performance dependency management.
 
-If you prefer to run the bot without Docker, you can follow these steps:
+### 1. Clone the repository
+```bash
+git clone https://github.com/ch3p4ll3/QBittorrentBot.git
+cd QBittorrentBot
+```
 
-1. Clone the repository:
+### 2. Install uv
+If you don't have `uv` installed yet, follow the [official installation guide](https://docs.astral.sh/uv/getting-started/installation/).
 
-   ```bash
-   git clone https://github.com/ch3p4ll3/QBittorrentBot.git
-   ```
+### 3. Setup Configuration
+Create your `config.yml` file based on the provided template.
 
-2. Move into the project directory:
+### 4. Start the Bot
+You don't need to manually install requirements into a global environment. Simply run:
 
-   ```bash
-   cd QBittorrentBot
-   ```
+```bash
+uv run python -m src.main
+```
 
-3. Install dependencies:
+> **Note:** `uv` will automatically create a virtual environment, install the necessary dependencies from your `pyproject.toml` or `requirements.txt`, and execute the bot as a module.
 
-   ```bash
-   pip3 install -r requirements.txt
-   ```
-
-4. Create your **`config.yml`** file.
-
-5. Start the bot:
-
-   ```bash
-   python3 main.py
-   ```
+### Why the change?
+Using `python -m src.main` instead of `python3 main.py` ensures that the Python interpreter correctly recognizes the `src` folder as a package, preventing common `ImportError` issues with relative paths.
 
 ## Contributing Translations on Transifex
 
@@ -205,6 +202,7 @@ Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/d
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/bushig"><img src="https://avatars.githubusercontent.com/u/2815779?v=4?s=100" width="100px;" alt="Bogdan"/><br /><sub><b>Bogdan</b></sub></a><br /><a href="https://github.com/ch3p4ll3/QBittorrentBot/commits?author=bushig" title="Code">💻</a></td>
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/joey00797"><img src="https://avatars.githubusercontent.com/u/52893618?v=4?s=100" width="100px;" alt="joey00797"/><br /><sub><b>joey00797</b></sub></a><br /><a href="#translation-joey00797" title="Translation">🌍</a></td>
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/rdfortega"><img src="https://avatars.githubusercontent.com/u/19917918?v=4?s=100" width="100px;" alt="Rodolfo Ortega"/><br /><sub><b>Rodolfo Ortega</b></sub></a><br /><a href="#translation-rdfortega" title="Translation">🌍</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/fiveh"><img src="https://avatars.githubusercontent.com/u/12550241?v=4?s=100" width="100px;" alt="Andrew Miroshnichenko"/><br /><sub><b>Andrew Miroshnichenko</b></sub></a><br /><a href="https://github.com/ch3p4ll3/QBittorrentBot/commits?author=fiveh" title="Code">💻</a> <a href="https://github.com/ch3p4ll3/QBittorrentBot/issues?q=author%3Afiveh" title="Bug reports">🐛</a></td>
     </tr>
   </tbody>
 </table>

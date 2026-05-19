@@ -5,6 +5,7 @@ from logging import getLogger
 from pathlib import Path
 from watchfiles import awatch
 
+from src.utils import escape_markdown
 from src.redis_helper.wrapper import RedisWrapper
 from src.client_manager.client_repo import ClientRepo
 from src.settings import Settings
@@ -38,10 +39,10 @@ async def torrent_finished(bot: Bot, redis: RedisWrapper, settings: Settings, i1
 
                             ctx.use_locale(user_lang)
                             await bot.send_message(
-                                user.user_id, 
+                                user.user_id,
                                 _("Torrent {name} has finished downloading!"
                                     .format(
-                                        name=i.name
+                                        name=escape_markdown(i.name)
                                     )
                                 )
                             )

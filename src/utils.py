@@ -1,6 +1,6 @@
 from math import log, floor
 import datetime
-from typing import Dict
+import re
 
 from src.settings.user import User
 
@@ -48,3 +48,9 @@ def inejct_new_config_data(json_data: dict):
     for index, i in enumerate(json_data['users']):
         i['notification_filter'] = []
         json_data['users'][index] = i
+
+
+def escape_markdown(text: str):
+    # Characters that need escaping in Telegram MarkdownV2
+    escape_chars = r'_*[]()~`>#+-=|{}.!'
+    return re.sub(f'([{re.escape(escape_chars)}])', r'\\\1', text)
