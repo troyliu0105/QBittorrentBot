@@ -9,7 +9,6 @@ from aiogram.utils.i18n import gettext as _
 
 from src.client_manager.client_repo import ClientRepo
 from src.settings import Settings
-from src.settings.user import User
 from src.bot.filters import IsAuthorizedUser, IsCommand
 from src.redis_helper.wrapper import RedisWrapper
 
@@ -22,7 +21,7 @@ logger = logging.getLogger(__name__)
 def get_router():
     router = Router()
 
-    async def on_magnet(message: Message, user, redis: RedisWrapper, bot: Bot, settings: Settings):
+    async def on_magnet(message: Message, redis: RedisWrapper, bot: Bot, settings: Settings):
         if message.text.startswith("magnet:?xt"):
             magnet_link = message.text.split("\n")
             category = (await redis.get(f"action:{message.from_user.id}")).split("#")[1]
@@ -46,11 +45,13 @@ def get_router():
             )
 
 
-    async def on_torrent(message: Message, user, redis: RedisWrapper, bot: Bot, settings: Settings):
+    async def on_torrent(message: Message, redis: RedisWrapper, bot: Bot, settings: Settings):
         if ".torrent" in message.document.file_name:
             with tempfile.TemporaryDirectory() as tempdir:
                 name = f"{tempdir}/{message.document.file_name}"
-                category = (await redis.get(f"action:{message.from_user.id}")).split("#")[1]
+
+                action = await redis.get(f"action:{message.from_user.id}") or ""
+                category = action.split("#")[1] if action else None
 
                 file = await bot.get_file(message.document.file_id)
                 file_path = file.file_path
@@ -62,6 +63,12 @@ def get_router():
                 if not response:
                     await message.reply(_("Unable to add torrent file"))
                     return
+
+            if not action:
+                pass
+                #await list_categories(bot, message.chat.id, message.message_id, settings, f"torrent_cat:{response}")
+                #await redis.set(f"action:{message.from_user.id}", None)
+                #return
 
             await send_menu(bot, redis, settings, message.chat.id, message.message_id)
             await redis.set(f"action:{message.from_user.id}", None)
@@ -98,14 +105,17 @@ def get_router():
 
 
     @router.message(~F.from_user.is_bot, ~IsCommand(), IsAuthorizedUser())
-    async def on_message(message: Message, redis: RedisWrapper, bot: Bot, settings: Settings, user: User) -> None:
+    async def on_message(message: Message, redis: RedisWrapper, bot: Bot, settings: Settings) -> None:
         action = await redis.get(f"action:{message.from_user.id}") or ""
 
-        if "magnet" in action:
-            await on_magnet(message, user, redis, bot, settings)
+        if message.document and not action: # insert torrent without using UI
+             await on_torrent(message, redis, bot, settings)
+
+        elif "magnet" in action:
+            await on_magnet(message, redis, bot, settings)
 
         elif "torrent" in action and message.document:
-            await on_torrent(message, user, redis, bot, settings)
+            await on_torrent(message, redis, bot, settings)
 
         elif action == "category_name":
             await on_category_name(message, redis)

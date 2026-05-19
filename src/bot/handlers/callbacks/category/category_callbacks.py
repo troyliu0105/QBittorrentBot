@@ -3,12 +3,13 @@ from aiogram.types import CallbackQuery, InlineKeyboardMarkup, InlineKeyboardBut
 from aiogram.utils.i18n import gettext as _
 
 from src.client_manager.client_repo import ClientRepo
-from src.settings import Settings, User
+from src.settings import Settings
 from src.settings.enums import UserRolesEnum
 from src.redis_helper.wrapper import RedisWrapper
 
 from src.bot.filters import HasRole
-from src.bot.filters.callbacks import AddCategory, SelectCategory, CategoryMenu, Menu, RemoveCategory, ModifyCategory, CategoryAction, AddMagnet, AddTorrent
+from src.bot.filters.callbacks import AddCategory, SelectCategory, CategoryMenu, Menu, RemoveCategory, ModifyCategory, CategoryAction, AddMagnet, AddTorrent, ChangeTorrentCategory
+from src.bot.handlers.common import list_categories, send_menu
 
 
 def get_router():
@@ -67,43 +68,8 @@ def get_router():
 
     @router.callback_query(SelectCategory.filter(), HasRole(UserRolesEnum.Administrator))
     @router.callback_query(SelectCategory.filter(), HasRole(UserRolesEnum.Manager))
-    async def list_categories(callback_query: CallbackQuery, callback_data: SelectCategory, bot: Bot, settings: Settings):
-        buttons = []
-
-        repository_class_class = ClientRepo.get_client_manager(settings.client.type)
-        categories = repository_class_class(settings).get_categories()
-
-        if categories is None:
-            buttons.append([InlineKeyboardButton(text=_("🔙 Menu"), callback_data=Menu().pack())])
-
-            await bot.edit_message_text(
-                chat_id=callback_query.from_user.id,
-                message_id=callback_query.message.message_id,
-                text=_("There are no categories"),
-                reply_markup=InlineKeyboardMarkup(inline_keyboard=buttons)
-            )
-
-            return
-
-        for _, i in enumerate(categories):
-            buttons.append([InlineKeyboardButton(text=i, callback_data=f"{callback_data.action}:{i}")])
-
-        buttons.append([InlineKeyboardButton(text=_("🔙 Menu"), callback_data=Menu().pack())])
-
-        try:
-            await bot.edit_message_text(
-                chat_id=callback_query.from_user.id,
-                message_id=callback_query.message.message_id,
-                text=_("Choose a category:"),
-                reply_markup=InlineKeyboardMarkup(inline_keyboard=buttons)
-            )
-
-        except Exception:
-            await bot.send_message(
-                callback_query.from_user.id,
-                _("Choose a category:"),
-                reply_markup=InlineKeyboardMarkup(inline_keyboard=buttons)
-            )
+    async def on_list_categories(callback_query: CallbackQuery, callback_data: SelectCategory, bot: Bot, settings: Settings):
+        await list_categories(bot, callback_query.from_user.id, callback_query.message.message_id, settings, callback_data.action)
 
 
     @router.callback_query(RemoveCategory.filter(), HasRole(UserRolesEnum.Administrator))
@@ -180,5 +146,22 @@ def get_router():
                 _("Choose a category:"),
                 reply_markup=InlineKeyboardMarkup(inline_keyboard=buttons)
             )
+
+    @router.callback_query(ChangeTorrentCategory.filter())
+    async def edit_torrent_cateogry(callback_query: CallbackQuery, callback_data: ChangeTorrentCategory, settings: Settings, bot: Bot, redis: RedisWrapper):
+        repository_class = ClientRepo.get_client_manager(settings.client.type)
+        await repository_class(settings).get_categories()
+
+        await callback_query.answer(
+            text=_(
+                "Torrent category changed to {category}"
+                    .format(
+                        category=callback_data.category
+                    )
+                ),
+                show_alert=True
+            )
+
+        await send_menu(bot, redis, settings, callback_query.from_user.id, callback_query.message.message_id)
 
     return router
