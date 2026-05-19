@@ -12,7 +12,7 @@ from src.settings import Settings
 from src.bot.filters import IsAuthorizedUser, IsCommand
 from src.redis_helper.wrapper import RedisWrapper
 
-from .common import send_menu, list_categories
+from .common import send_menu
 
 
 logger = logging.getLogger(__name__)
@@ -49,7 +49,7 @@ def get_router():
         if ".torrent" in message.document.file_name:
             with tempfile.TemporaryDirectory() as tempdir:
                 name = f"{tempdir}/{message.document.file_name}"
-                
+
                 action = await redis.get(f"action:{message.from_user.id}") or ""
                 category = action.split("#")[1] if action else None
 
