@@ -18,6 +18,7 @@ class RedisWrapper:
     async def connect(self):
         if not self._url or not redis:
             logging.warning("Redis disabled. using in-memory storage")
+            logging.warning("Redis emulator is intended for development use only, configure redis to avoid data loss")
             self._client = self._emulator
             return
 
