@@ -22,15 +22,34 @@ class QbittorrentManager(ClientManager):
     def _client(self) -> AsyncQbittorrentClient:
         return AsyncQbittorrentClient(**self.settings.client.connection_string)
 
+    @staticmethod
+    def _is_add_success(result, kind: str) -> bool:
+        """Judge whether torrents_add succeeded.
+
+        qBittorrent Web API < 2.14.0 returns the text "Ok."; >= 2.14.0 returns a
+        TorrentsAddedMetadata object (a dict subclass). Treat both as success.
+        """
+        if result == "Ok.":
+            return True
+        # New API: non-string object (TorrentsAddedMetadata / dict). Non-empty => added.
+        if not isinstance(result, str) and result:
+            return True
+        logger.warning("torrents_add (%s) reported failure: %r", kind, result)
+        return False
+
     async def add_magnet(self, magnet_link: Union[str, List[str]], category: str = None) -> bool:
         if category == "None":
             category = None
 
-        async with self._client() as qbt:
-            logger.debug(f"Adding magnet with category {category}")
-            result = await qbt.call(qbt.client.torrents_add, urls=magnet_link, category=category)
+        try:
+            async with self._client() as qbt:
+                logger.debug(f"Adding magnet with category {category}")
+                result = await qbt.call(qbt.client.torrents_add, urls=magnet_link, category=category)
+        except Exception:
+            logger.error("torrents_add (magnet) raised an exception", exc_info=True)
+            return False
 
-        return result == "Ok."
+        return self._is_add_success(result, "magnet")
 
     async def add_torrent(self, file_name: str, category: str = None) -> bool:
         if category == "None":
@@ -40,10 +59,14 @@ class QbittorrentManager(ClientManager):
             async with self._client() as qbt:
                 logger.debug(f"Adding torrent with category {category}")
                 result = await qbt.call(qbt.client.torrents_add, torrent_files=file_name, category=category)
-            return result == "Ok."
-
         except qbittorrentapi.exceptions.UnsupportedMediaType415Error:
-            pass
+            logger.warning("torrents_add (file) rejected media type for %s", file_name)
+            return False
+        except Exception:
+            logger.error("torrents_add (file) raised an exception", exc_info=True)
+            return False
+
+        return self._is_add_success(result, "file")
 
     async def resume_all(self) -> None:
         logger.debug("Resuming all torrents")
