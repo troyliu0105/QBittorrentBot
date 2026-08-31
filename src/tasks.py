@@ -1,5 +1,6 @@
+import time
+
 from aiogram import Bot
-from aiogram.utils.i18n import gettext as _
 
 from logging import getLogger
 from pathlib import Path
@@ -25,31 +26,42 @@ def user_filters(users: list[User], category: str):
             yield user
 
 
+COMPLETION_NOTIFY_WINDOW = 24 * 3600  # notify only for torrents finished within the last 24h
+
+
 async def torrent_finished(bot: Bot, redis: RedisWrapper, settings: Settings, i18n_middleware: CustomI18nMiddleware):
     repository_class = ClientRepo.get_client_manager(settings.client.type)
 
     for i in await repository_class(settings).get_torrents(status_filter="completed"):
-        if not await redis.exists(i.hash):
+        # Skip torrents that completed before the notification window: their
+        # dedup key may have expired, but re-notifying would still be wrong.
+        completion_on = i.completion_on
+        if completion_on and (time.time() - completion_on) > COMPLETION_NOTIFY_WINDOW:
+            continue
 
-            for user in user_filters(settings.users, i.category):
-                if user.notify:
-                    try:
-                        with i18n_middleware.i18n.context() as ctx:
-                            user_lang = user.locale if user.locale else ctx.default_locale
+        if await redis.exists(i.hash):
+            continue
 
-                            ctx.use_locale(user_lang)
-                            await bot.send_message(
-                                user.user_id,
-                                _("Torrent {name} has finished downloading!"
-                                    .format(
-                                        name=escape_markdown(i.name)
-                                    )
+        for user in user_filters(settings.users, i.category):
+            if user.notify:
+                try:
+                    with i18n_middleware.i18n.context() as ctx:
+                        user_lang = user.locale if user.locale else ctx.default_locale
+
+                        ctx.use_locale(user_lang)
+                        await bot.send_message(
+                            user.user_id,
+                            _("Torrent {name} has finished downloading!"
+                                .format(
+                                    name=escape_markdown(i.name)
                                 )
                             )
-                    except Exception as e:
-                        logger.exception(e)
+                        )
+                except Exception as e:
+                    logger.exception(e)
 
-            await redis.set(i.hash, True, 10 * 86400)  # store for 10 days
+        # Dedup key for the 60s polling loop; TTL backstops restart-time reuse.
+        await redis.set(i.hash, True, 10 * 86400)
 
 
 async def watch_config(path: Path, settings: Settings):

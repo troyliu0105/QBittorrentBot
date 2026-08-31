@@ -12,3 +12,4 @@ class Torrent:
     size: int
     eta: int
     category: Union[str, None]
+    completion_on: Union[int, None] = None
