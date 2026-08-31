@@ -11,7 +11,7 @@ class QBittorrentMapper(Mapper):
         if isinstance(torrents, TorrentInfoList):
             return [
                 Torrent(
-                    torrent.info.hash,
+                    torrent.hash,
                     torrent.name,
                     torrent.progress,
                     torrent.dlspeed,
@@ -25,7 +25,7 @@ class QBittorrentMapper(Mapper):
             ]
 
         return Torrent(
-            torrents.info.hash,
+            torrents.hash,
             torrents.name,
             torrents.progress,
             torrents.dlspeed,

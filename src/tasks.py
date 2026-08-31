@@ -1,5 +1,7 @@
 import time
 
+from aiogram.utils.i18n import gettext as _
+
 from aiogram import Bot
 
 from logging import getLogger
