@@ -33,13 +33,26 @@ class RedisWrapper:
 
     # Unified API
     async def get(self, key: str) -> Optional[Any]:
-        return await self._client.get(key)
+        value = await self._client.get(key)
+        # Empty string is the on-disk form of a "cleared" value (set(key, None));
+        # surface it as None so both backends behave identically.
+        return None if value == "" else value
 
     async def set(self, key: str, value: Any, ex: int | None = None):
+        if value is None:
+            # Callers use set(key, None) to clear; delete so get/exists agree.
+            await self._client.delete(key)
+            return
+        # Normalize payloads so both backends store/return identical forms:
+        # redis-py rejects bool and stringifies nothing, the emulator does both.
+        if isinstance(value, bool):
+            value = int(value)
+        if not isinstance(value, (str, bytes)):
+            value = str(value)
         await self._client.set(key, value, ex=ex)
 
     async def delete(self, key: str):
         await self._client.delete(key)
 
     async def exists(self, key: str) -> bool:
-        return await self._client.exists(key)
+        return bool(await self._client.exists(key))
