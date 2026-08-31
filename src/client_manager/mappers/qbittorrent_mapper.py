@@ -19,8 +19,9 @@ class QBittorrentMapper(Mapper):
                     torrent.size,
                     torrent.eta,
                     torrent.category,
-                    torrent.get("completion_on")
+                    torrent.get("completion_on"),
                 )
+                for torrent in torrents
             ]
 
         return Torrent(
